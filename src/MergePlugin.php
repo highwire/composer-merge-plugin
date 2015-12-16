@@ -195,7 +195,7 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
     }
 
     protected function validatePath($path){
-        if(strpos ( $path , 'http') == 0){
+        if(substr($path, 0, 4) === 'http'){
             $headers = get_headers ( $path );
             if ( strpos($headers[0], '404') == 0){
                 return array($path);    
