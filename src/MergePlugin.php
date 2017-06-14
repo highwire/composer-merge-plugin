@@ -93,6 +93,26 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
     const COMPAT_PLUGINEVENTS_INIT = 'init';
 
     /**
+     * Name of the pre-merge command to be run before a required merge
+     */
+    const PRE_MERGE_REQUIRED_CMD = 'pre-merge-require-cmd';
+
+    /**
+     * Name of the pre-merge command to be run before an optional merge
+     */
+    const PRE_MERGE_OPTIONAL_CMD = 'pre-merge-optional-cmd';
+
+    /**
+     * Name of the post-merge command to be run after a required merge
+     */
+    const POST_MERGE_REQUIRED_CMD = 'post-merge-require-cmd';
+
+    /**
+     * Name of the post-merge command to be run after an optional merge
+     */
+    const POST_MERGE_OPTIONAL_CMD = 'post-merge-optional-cmd';
+
+    /**
      * Priority that plugin uses to register callbacks.
      */
     const CALLBACK_PRIORITY = 50000;
@@ -220,6 +240,10 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
      */
     protected function mergeFiles(array $patterns, $required = false)
     {
+        // Dispatch any pre-merge commands
+        $pre_merge_command = $required ? self::PRE_MERGE_REQUIRED_CMD : self::PRE_MERGE_OPTIONAL_CMD;
+        $this->composer->getEventDispatcher()->dispatchScript($pre_merge_command, true);
+
         $root = $this->composer->getPackage();
 
         $files = array_map(
@@ -238,6 +262,10 @@ class MergePlugin implements PluginInterface, EventSubscriberInterface
         foreach (array_reduce($files, 'array_merge', array()) as $path) {
             $this->mergeFile($root, $path);
         }
+
+        // Dispatch any post-merge commands
+        $post_merge_command = $required ? self::POST_MERGE_REQUIRED_CMD : self::POST_MERGE_OPTIONAL_CMD;
+        $this->composer->getEventDispatcher()->dispatchScript($post_merge_command, true);
     }
 
     protected function validatePath($path)
